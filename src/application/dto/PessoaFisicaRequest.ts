@@ -7,6 +7,4 @@ export class PessoaFisicaRequest {
   cpf: string;
   @IsDateString()
   dataNascimento: string;
-  @IsDateString()
-  dataCadastro: string;
 }

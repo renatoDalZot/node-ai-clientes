@@ -4,17 +4,17 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PessoaFisicaService } from './application/service/PessoaFisicaService';
 import { PessoaFisicaController } from './application/controller/PessoaFisicaController';
-import { PessoaFisicaEntity } from './domain/model/PessoaFisicaEntity';
+import { PessoaFisica as PessoaFisica } from './domain/model/PessoaFisica';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'test.db', 
-      entities: [PessoaFisicaEntity],
+      entities: [PessoaFisica],
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([PessoaFisicaEntity]), 
+    TypeOrmModule.forFeature([PessoaFisica]), 
   ],
   controllers: [AppController, PessoaFisicaController],
   providers: [AppService, PessoaFisicaService],

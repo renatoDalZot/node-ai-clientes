@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PessoaFisicaEntity } from '../../domain/model/PessoaFisicaEntity';
+import { PessoaFisica as PessoaFisica } from '../../domain/model/PessoaFisica';
 import { PessoaFisicaRequest } from '../dto/PessoaFisicaRequest';
 import { PessoaFisicaResponse } from '../dto/PessoaFisicaResponse';
 
@@ -9,8 +9,8 @@ import { PessoaFisicaResponse } from '../dto/PessoaFisicaResponse';
 @Injectable()
 export class PessoaFisicaService {
   constructor(
-    @InjectRepository(PessoaFisicaEntity)
-    private readonly pessoaFisicaRepository: Repository<PessoaFisicaEntity>,
+    @InjectRepository(PessoaFisica)
+    private readonly pessoaFisicaRepository: Repository<PessoaFisica>,
   ) {}
 
   async findById(id: number): Promise<PessoaFisicaResponse | null> {
@@ -30,19 +30,18 @@ export class PessoaFisicaService {
       throw new Error('Já existe uma pessoa física cadastrada com este CPF.');
     }
 
-    const novaPessoaFisica = new PessoaFisicaEntity(      
+    const novaPessoaFisica = new PessoaFisica(      
       pessoaFisica.nome,
       pessoaFisica.cpf,
       new Date(pessoaFisica.dataNascimento),
-      new Date(pessoaFisica.dataCadastro),
+      new Date()
     );
     
     const savedEntity = await this.pessoaFisicaRepository.save(novaPessoaFisica);
     return PessoaFisicaService.toPessoaFisicaResponse(savedEntity);
   }
 
-
-  static toPessoaFisicaResponse(entity: PessoaFisicaEntity | null): PessoaFisicaResponse | null {
+  private static toPessoaFisicaResponse(entity: PessoaFisica | null): PessoaFisicaResponse | null {
     if (!entity) return null;
     const response = new PessoaFisicaResponse();    
     response.nome = entity.nome;

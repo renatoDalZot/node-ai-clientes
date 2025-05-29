@@ -6,6 +6,7 @@ import { timestamp } from 'rxjs';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  // Exmperimentos com sincronicidade e assincronicidade
   @Get('/hellow/:miliseconds')
   getHello(@Param('miliseconds', ParseIntPipe) miliseconds: number): Promise<string> {
     return new Promise(async (resolve) => {
@@ -15,6 +16,7 @@ export class AppController {
     });    
   }
 
+  // Exmperimentos com sincronicidade e assincronicidade
   @Get('/hellow/v2/:miliseconds')
   getHelloV2(@Param('miliseconds', ParseIntPipe) miliseconds: number): string {
     this.sleepSync(miliseconds);
