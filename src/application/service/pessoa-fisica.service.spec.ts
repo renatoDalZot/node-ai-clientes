@@ -3,6 +3,7 @@ import { PessoaFisicaService } from './PessoaFisicaService';
 import { PessoaFisica as PessoaFisica } from '../../domain/model/PessoaFisica';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PessoaFisicaRequest } from '../dto/PessoaFisicaRequest';
 
 describe('PessoaFisicaService', () => {
   let service: PessoaFisicaService;
@@ -31,13 +32,13 @@ describe('PessoaFisicaService', () => {
     const pessoaFisicaRequest = {
       nome: 'Nome',
       cpf: '12345678901',
-      dataNascimento: '2000-01-01',
-    };
+      dataNascimento: new Date('2000-01-01'),
+    } as PessoaFisicaRequest;
 
     const entity = new PessoaFisica(
       pessoaFisicaRequest.nome,
       pessoaFisicaRequest.cpf,
-      new Date(pessoaFisicaRequest.dataNascimento),
+      pessoaFisicaRequest.dataNascimento,
       new Date()
     );
 
@@ -52,15 +53,18 @@ describe('PessoaFisicaService', () => {
     expect(result).toBeDefined();
     expect(result?.nome).toBe('Nome');
     expect(result?.cpf).toBe('12345678901');
-    expect(result?.dataNascimento).toBe('2000-01-01');
-    expect(result?.dataCadastro).toBeDefined();
+    expect(result?.dataNascimento).toBeInstanceOf(Date);
+    expect(result?.dataNascimento.getTime()).toBe(new Date('2000-01-01').getTime());
+    expect(result?.dataCadastro).toBeInstanceOf(Date);
     expect(repository.findOne).toHaveBeenCalledWith({ where: { cpf: pessoaFisicaRequest.cpf } });
     expect(repository.save).toHaveBeenCalledWith(expect.any(PessoaFisica));
-    const now = new Date();
-    const resultDataCadastro = result?.dataCadastro ? new Date(result.dataCadastro) : null;
-    expect(resultDataCadastro).not.toBeNull();    
-    const umDiaEmMs = 24 * 60 * 60 * 1000;
-    expect(Math.abs(resultDataCadastro!.getTime() - now.getTime())).toBeLessThan(umDiaEmMs);
+        const now = new Date();
+    const resultDataCadastro = result?.dataCadastro;
+    expect(resultDataCadastro).not.toBeNull();
+    // Verifica se a dataCadastro é no mesmo dia (ignorando hora/min/seg)
+    expect(resultDataCadastro!.getFullYear()).toBe(now.getFullYear());
+    expect(resultDataCadastro!.getMonth()).toBe(now.getMonth());
+    expect(resultDataCadastro!.getDate()).toBe(now.getDate());
   });
 
   it('deve retornar PessoaFisicaResponse quando encontrar a entidade', async () => {
@@ -78,7 +82,8 @@ describe('PessoaFisicaService', () => {
     expect(result).toBeDefined();
     expect(result?.nome).toBe('Nome');
     expect(result?.cpf).toBe('12345678901');
-    expect(result?.dataNascimento).toBe('2000-01-01');    
+    expect(result?.dataNascimento).toBeInstanceOf(Date);
+    expect(result?.dataNascimento.getTime()).toBe(new Date('2000-01-01').getTime());
   });
 
   it('deve retornar null quando não encontrar a entidade', async () => {
@@ -93,22 +98,22 @@ describe('PessoaFisicaService', () => {
   });
 
   it('deve lançar erro ao tentar cadastrar uma PessoaFisica com CPF já existente', async () => {
-  const pessoaFisicaRequest = {
-    nome: 'Nome',
-    cpf: '12345678901',
-    dataNascimento: '2000-01-01',
-  };
-  const entity = new PessoaFisica(
-    pessoaFisicaRequest.nome,
-    pessoaFisicaRequest.cpf,
-    new Date(pessoaFisicaRequest.dataNascimento),
-    new Date()
-  );
-  jest.spyOn(repository, 'findOne').mockResolvedValue(entity);
+    const pessoaFisicaRequest = {
+      nome: 'Nome',
+      cpf: '12345678901',
+      dataNascimento: new Date('2000-01-01'),
+    };
+    const entity = new PessoaFisica(
+      pessoaFisicaRequest.nome,
+      pessoaFisicaRequest.cpf,
+      pessoaFisicaRequest.dataNascimento,
+      new Date()
+    );
+    jest.spyOn(repository, 'findOne').mockResolvedValue(entity);
 
-  await expect(service.cadastrarPessoaFisica(pessoaFisicaRequest))
-    .rejects
-    .toThrow('Já existe uma pessoa física cadastrada com este CPF.');
-});
+    await expect(service.cadastrarPessoaFisica(pessoaFisicaRequest))
+      .rejects
+      .toThrow('Já existe uma pessoa física cadastrada com este CPF.');
+  });
   
 });

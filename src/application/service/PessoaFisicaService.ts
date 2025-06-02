@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PessoaFisica as PessoaFisica } from '../../domain/model/PessoaFisica';
 import { PessoaFisicaRequest } from '../dto/PessoaFisicaRequest';
 import { PessoaFisicaResponse } from '../dto/PessoaFisicaResponse';
+import { PessoaFisicaMapper } from '../mapper/PessoaFisicaMapper';
 
 
 @Injectable()
@@ -17,7 +18,7 @@ export class PessoaFisicaService {
     const entity = await this.pessoaFisicaRepository.findOne({ where: { id } });
     /* return entity ? PessoaFisicaService.toPessoaFisicaResponse(entity) : null; */
     
-    return PessoaFisicaService.toPessoaFisicaResponse(entity);
+    return PessoaFisicaMapper.toResponse(entity);
 
   }
 
@@ -33,22 +34,11 @@ export class PessoaFisicaService {
     const novaPessoaFisica = new PessoaFisica(      
       pessoaFisica.nome,
       pessoaFisica.cpf,
-      new Date(pessoaFisica.dataNascimento),
+      new Date(pessoaFisica.dataNascimento.toString()),
       new Date()
     );
     
     const savedEntity = await this.pessoaFisicaRepository.save(novaPessoaFisica);
-    return PessoaFisicaService.toPessoaFisicaResponse(savedEntity);
-  }
-
-  private static toPessoaFisicaResponse(entity: PessoaFisica | null): PessoaFisicaResponse | null {
-    if (!entity) return null;
-    const response = new PessoaFisicaResponse();    
-    response.nome = entity.nome;
-    response.cpf = entity.cpf;
-    response.dataNascimento = entity.dataNascimento.toISOString().split('T')[0]
-    response.dataCadastro = entity.dataCadastro.toISOString().split('T')[0];
-    
-    return response;
+    return PessoaFisicaMapper.toResponse(savedEntity);
   }
 }
