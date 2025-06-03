@@ -9,6 +9,12 @@ describe('PessoaFisicaService', () => {
   let service: PessoaFisicaService;
   let repository: Repository<PessoaFisica>;
 
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2025-01-01'));
+  });
+    
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -25,6 +31,10 @@ describe('PessoaFisicaService', () => {
 
     service = module.get<PessoaFisicaService>(PessoaFisicaService);
     repository = module.get<Repository<PessoaFisica>>(getRepositoryToken(PessoaFisica));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
   });
 
   it('deve cadastrar uma nova PessoaFisica', async () => {
@@ -44,27 +54,20 @@ describe('PessoaFisicaService', () => {
 
     // Configuração do mock
     jest.spyOn(repository, 'findOne').mockResolvedValue(null);
-    jest.spyOn(repository, 'save').mockResolvedValue(entity);
+    jest.spyOn(repository, 'save').mockResolvedValue(entity);    
 
     // Ação
     const result = await service.cadastrarPessoaFisica(pessoaFisicaRequest);
 
     // Verificação
     expect(result).toBeDefined();
-    expect(result?.nome).toBe('Nome');
-    expect(result?.cpf).toBe('12345678901');
-    expect(result?.dataNascimento).toBeInstanceOf(Date);
-    expect(result?.dataNascimento.getTime()).toBe(new Date('2000-01-01').getTime());
-    expect(result?.dataCadastro).toBeInstanceOf(Date);
+    expect(result.nome).toBe('Nome');
+    expect(result.cpf).toBe('12345678901');    
+    expect(result.dataNascimento.toISOString().substring(0, 10)).toBe('2000-01-01');    
+    expect(result.dataCadastro.toISOString().substring(0, 10)).toBe('2025-01-01');   
+
     expect(repository.findOne).toHaveBeenCalledWith({ where: { cpf: pessoaFisicaRequest.cpf } });
-    expect(repository.save).toHaveBeenCalledWith(expect.any(PessoaFisica));
-        const now = new Date();
-    const resultDataCadastro = result?.dataCadastro;
-    expect(resultDataCadastro).not.toBeNull();
-    // Verifica se a dataCadastro é no mesmo dia (ignorando hora/min/seg)
-    expect(resultDataCadastro!.getFullYear()).toBe(now.getFullYear());
-    expect(resultDataCadastro!.getMonth()).toBe(now.getMonth());
-    expect(resultDataCadastro!.getDate()).toBe(now.getDate());
+    expect(repository.save).toHaveBeenCalledWith(expect.any(PessoaFisica));       
   });
 
   it('deve retornar PessoaFisicaResponse quando encontrar a entidade', async () => {

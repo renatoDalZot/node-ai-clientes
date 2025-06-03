@@ -2,8 +2,8 @@ import { PessoaFisica } from '../../domain/model/PessoaFisica';
 import { PessoaFisicaResponse } from '../dto/PessoaFisicaResponse';
 
 export class PessoaFisicaMapper {
-  static toResponse(entity: PessoaFisica | null): PessoaFisicaResponse | null {
-    if (!entity) return null;
+  static toResponse(entity: PessoaFisica): PessoaFisicaResponse {
+   
     const response = new PessoaFisicaResponse();
     response.nome = entity.nome;
     response.cpf = entity.cpf;
