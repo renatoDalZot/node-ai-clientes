@@ -1,87 +1,84 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PessoaFisicaService } from './PessoaFisicaService';
-import { PessoaFisica as PessoaFisica } from '../../domain/model/PessoaFisica';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { PessoaFisicaRequest } from '../dto/PessoaFisicaRequest';
+import { PessoaFisicaService } from './pessoa-fisica.service';
+import { PessoaFisicaRepository } from '../../domain/repository/pessoa-fisica-repository';
+import { PessoaFisicaRequest } from '../dto/pessoa-fisica.request';
+import { PessoaFisica } from '@prisma/client';
 
 describe('PessoaFisicaService', () => {
   let service: PessoaFisicaService;
-  let repository: Repository<PessoaFisica>;
-
-  beforeAll(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date('2025-01-01'));
-  });
-    
+  let repository: jest.Mocked<PessoaFisicaRepository>;
 
   beforeEach(async () => {
+    const repositoryMock: jest.Mocked<PessoaFisicaRepository> = {
+      findByCpf: jest.fn(),
+      findById: jest.fn(),
+      create: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PessoaFisicaService,
         {
-          provide: getRepositoryToken(PessoaFisica),
-          useValue: {
-            findOne: jest.fn(),
-            save: jest.fn(),
-          },
+          provide: 'PessoaFisicaRepository',
+          useValue: repositoryMock,
         },
       ],
     }).compile();
 
     service = module.get<PessoaFisicaService>(PessoaFisicaService);
-    repository = module.get<Repository<PessoaFisica>>(getRepositoryToken(PessoaFisica));
-  });
-
-  afterAll(() => {
-    jest.useRealTimers();
+    repository = module.get('PessoaFisicaRepository');
   });
 
   it('deve cadastrar uma nova PessoaFisica', async () => {
-    // Arranjo
-    const pessoaFisicaRequest = {
+    const pessoaFisicaRequest: PessoaFisicaRequest = {
       nome: 'Nome',
       cpf: '12345678901',
-      dataNascimento: new Date('2000-01-01'),
-    } as PessoaFisicaRequest;
+      dataNascimento: '2000-01-01',
+    };
 
-    const entity = new PessoaFisica(
-      pessoaFisicaRequest.nome,
-      pessoaFisicaRequest.cpf,
-      pessoaFisicaRequest.dataNascimento,
-      new Date()
-    );
+    // Simula que não existe pessoa com o CPF
+    repository.findByCpf.mockResolvedValue(null);
 
-    // Configuração do mock
-    jest.spyOn(repository, 'findOne').mockResolvedValue(null);
-    jest.spyOn(repository, 'save').mockResolvedValue(entity);    
+    // Simula a criação da pessoa
+    const entity = {
+      id: 1,
+      nome: pessoaFisicaRequest.nome,
+      cpf: pessoaFisicaRequest.cpf,
+      dataNascimento: new Date(pessoaFisicaRequest.dataNascimento),
+      dataCadastro: new Date('2025-01-01'),
+    };
+    repository.create.mockResolvedValue(entity);
 
-    // Ação
-    const result = await service.cadastrarPessoaFisica(pessoaFisicaRequest);
+    const result = await service.cadastrar(pessoaFisicaRequest);
 
-    // Verificação
     expect(result).toBeDefined();
     expect(result.nome).toBe('Nome');
-    expect(result.cpf).toBe('12345678901');    
-    expect(result.dataNascimento.toISOString().substring(0, 10)).toBe('2000-01-01');    
-    expect(result.dataCadastro.toISOString().substring(0, 10)).toBe('2025-01-01');   
+    expect(result.cpf).toBe('12345678901');
+    expect(result.dataNascimento.toISOString().substring(0, 10)).toBe('2000-01-01');
+    expect(result.dataCadastro).toBeDefined();
 
-    expect(repository.findOne).toHaveBeenCalledWith({ where: { cpf: pessoaFisicaRequest.cpf } });
-    expect(repository.save).toHaveBeenCalledWith(expect.any(PessoaFisica));       
+    expect(repository.findByCpf).toHaveBeenCalledWith('12345678901');    
+    expect(repository.create).toHaveBeenLastCalledWith({
+      nome: 'Nome',
+      cpf: '12345678901',
+      dataNascimento: new Date('2000-01-01'),   
+      dataCadastro: expect.any(Date),   
+    } as PessoaFisica);
   });
 
   it('deve retornar PessoaFisicaResponse quando encontrar a entidade', async () => {
-    // Arranjo
-    const entity = new PessoaFisica('Nome', '12345678901', new Date('2000-01-01'), new Date('2024-01-01'));
-    entity.id = 1;
+    const entity = {
+      id: 1,
+      nome: 'Nome',
+      cpf: '12345678901',
+      dataNascimento: new Date('2000-01-01'),
+      dataCadastro: new Date('2024-01-01'),
+    };
 
-    //Configuração do mock	
-    jest.spyOn(repository, 'findOne').mockResolvedValue(entity);
+    repository.findById.mockResolvedValue(entity);
 
-    // Ação
     const result = await service.findById(1);
 
-    // Verificação
     expect(result).toBeDefined();
     expect(result?.nome).toBe('Nome');
     expect(result?.cpf).toBe('12345678901');
@@ -90,33 +87,31 @@ describe('PessoaFisicaService', () => {
   });
 
   it('deve retornar null quando não encontrar a entidade', async () => {
-    // Configuração do mock
-    jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+    repository.findById.mockResolvedValue(null);
 
-    // Ação
     const result = await service.findById(999);
 
-    // Verificação
     expect(result).toBeNull();
   });
 
   it('deve lançar erro ao tentar cadastrar uma PessoaFisica com CPF já existente', async () => {
-    const pessoaFisicaRequest = {
+    const pessoaFisicaRequest: PessoaFisicaRequest = {
       nome: 'Nome',
       cpf: '12345678901',
-      dataNascimento: new Date('2000-01-01'),
+      dataNascimento: '2000-01-01',
     };
-    const entity = new PessoaFisica(
-      pessoaFisicaRequest.nome,
-      pessoaFisicaRequest.cpf,
-      pessoaFisicaRequest.dataNascimento,
-      new Date()
-    );
-    jest.spyOn(repository, 'findOne').mockResolvedValue(entity);
+    const entity = {
+      id: 1,
+      nome: pessoaFisicaRequest.nome,
+      cpf: pessoaFisicaRequest.cpf,
+      dataNascimento: new Date(pessoaFisicaRequest.dataNascimento),
+      dataCadastro: new Date(),
+    };
 
-    await expect(service.cadastrarPessoaFisica(pessoaFisicaRequest))
+    repository.findByCpf.mockResolvedValue(entity);
+
+    await expect(service.cadastrar(pessoaFisicaRequest))
       .rejects
       .toThrow('Já existe uma pessoa física cadastrada com este CPF.');
   });
-  
 });

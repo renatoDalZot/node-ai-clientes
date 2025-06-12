@@ -6,6 +6,6 @@ export class PessoaFisicaRequest {
   nome: string;
   @IsString()
   cpf: string;
-  @IsDate()
-  dataNascimento: Date;
+  @IsString()
+  dataNascimento: string;
 }
