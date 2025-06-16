@@ -1,17 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+export class PessoaFisica {
 
-@Entity({ name: 'pessoa_fisica' })
-export class PessoaFisicaEntity {
-
-    @PrimaryGeneratedColumn()
     id: number;
-    @Column({ type: 'varchar', length: 100 })
     nome: string;
-    @Column({ type: 'varchar', length: 11, unique: true })
     cpf: string;
-    @Column({ type: 'date' })
     dataNascimento: Date;
-    @Column({ type: 'date' })
     dataCadastro: Date;  
 
   constructor(    
