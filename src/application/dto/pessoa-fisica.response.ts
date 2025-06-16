@@ -3,4 +3,5 @@ export class PessoaFisicaResponse {
   cpf: string;
   dataNascimento: Date;
   dataCadastro: Date;
+  score: number;
 }
