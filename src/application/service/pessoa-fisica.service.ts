@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PessoaFisica as PessoaFisica } from '../../domain/model/pessoa-fisica.entity';
 import { PessoaFisicaRequest } from '../dto/pessoa-fisica.request';
-import { PessoaFisicaRepository } from 'src/domain/repository/pessoa-fisica-repository';
+import { PessoaFisicaRepository } from '../../domain/repository/pessoa-fisica-repository';
 
+import { PessoaFisica } from '../../domain/model/pessoa-fisica.entity';
 @Injectable()
 export class PessoaFisicaService {
   
