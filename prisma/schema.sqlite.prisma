@@ -13,4 +13,5 @@ model PessoaFisica {
   cpf            String   @unique
   dataNascimento DateTime
   dataCadastro   DateTime
+  score          Float
 }

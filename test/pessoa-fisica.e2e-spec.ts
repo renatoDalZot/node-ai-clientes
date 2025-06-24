@@ -1,22 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
-import { PessoaFisica, PrismaClient } from '@prisma/client';
 import { PessoaFisicaRequest } from 'src/application/dto/pessoa-fisica.request';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { PessoaFisica, PrismaClient } from '@prisma/client';
+import { Test, TestingModule } from '@nestjs/testing';
 
 describe('PessoaFisicaController (e2e)', () => {
   let app: INestApplication<App>;
-  let prisma: PrismaClient;
+  const prisma = new PrismaClient();
 
   beforeAll(async () => {
-    prisma = new PrismaClient();
-  });
-
-  beforeEach(async () => {    
-    await prisma.pessoaFisica.deleteMany();
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -24,6 +18,10 @@ describe('PessoaFisicaController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+  });
+
+  beforeEach(async () => {
+    await prisma.pessoaFisica.deleteMany();
   });
 
   afterAll(async () => {
@@ -48,7 +46,18 @@ describe('PessoaFisicaController (e2e)', () => {
     expect(response.body.cpf).toBe(pessoaFisica.cpf);
     expect(new Date(response.body.dataNascimento).toISOString()).toBe(new Date(pessoaFisica.dataNascimento).toISOString());
     expect(new Date(response.body.dataCadastro)).toBeInstanceOf(Date);
+
+    const pessoaCriada = await prisma.pessoaFisica.findUnique({
+      where: { cpf: "12345678901" },
+    }) as PessoaFisica;
+    
+    expect(pessoaCriada).not.toBeNull();
+    expect(pessoaCriada.nome).toBe('João Teste');
+    expect(pessoaCriada.cpf).toBe('12345678901');
+    expect(pessoaCriada.dataNascimento.toISOString()).toBe('1990-01-01T00:00:00.000Z');
+    expect(pessoaCriada.dataCadastro).toBeDefined();
   });
+  
 
   it('GET /v1/clientes/:id - deve retornar uma pessoa física por ID', async () => {    
     const pessoaCriada = await prisma.pessoaFisica.create({
@@ -57,8 +66,9 @@ describe('PessoaFisicaController (e2e)', () => {
         cpf: '98765432100',
         dataNascimento: new Date('1995-05-05T00:00:00.000Z'),
         dataCadastro: new Date(),
+        score: 5
       },
-    });
+    });    
 
     const response = await request(app.getHttpServer())
       .get(`/v1/clientes/${pessoaCriada.id}`)
