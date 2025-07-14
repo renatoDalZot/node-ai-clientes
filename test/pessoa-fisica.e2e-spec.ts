@@ -33,7 +33,7 @@ describe('PessoaFisicaController (e2e)', () => {
     const pessoaFisica = {
       nome: 'João Teste',
       cpf: '12345678901',
-      dataNascimento: '1990-01-01T00:00:00.000Z'
+      dataNascimento: '1990-01-01'
     } as PessoaFisicaRequest;
 
     const response = await request(app.getHttpServer())
@@ -42,9 +42,9 @@ describe('PessoaFisicaController (e2e)', () => {
 
     console.log(response.body);
     expect(response.status).toBe(201);
-    expect(response.body.nome).toBe(pessoaFisica.nome);
-    expect(response.body.cpf).toBe(pessoaFisica.cpf);
-    expect(new Date(response.body.dataNascimento).toISOString()).toBe(new Date(pessoaFisica.dataNascimento).toISOString());
+    expect(response.body.nome).toBe('João Teste');
+    expect(response.body.cpf).toBe('12345678901');
+    expect(new Date(response.body.dataNascimento).toISOString()).toBe('1990-01-01T00:00:00.000Z');
     expect(new Date(response.body.dataCadastro)).toBeInstanceOf(Date);
 
     const pessoaCriada = await prisma.pessoaFisica.findUnique({
@@ -64,7 +64,7 @@ describe('PessoaFisicaController (e2e)', () => {
       data: {
         nome: 'Maria Teste',
         cpf: '98765432100',
-        dataNascimento: new Date('1995-05-05T00:00:00.000Z'),
+        dataNascimento: new Date('1995-05-05'),
         dataCadastro: new Date(),
         score: 5
       },

@@ -1,3 +1,5 @@
+import * as moment from "moment";
+
 export class PessoaFisica {
   private static readonly IDADE_MINIMA_PERMITIDA = 18;
   private static readonly IDADE_DECLINIO = 50;
@@ -53,12 +55,10 @@ export class PessoaFisica {
    
 
   private calcularIdade(): number {
-    let idade = this.dataCadastro.getFullYear() - this.dataNascimento.getFullYear();
-    const diferencaMesesIdadeCadastro = this.dataCadastro.getMonth() - this.dataNascimento.getMonth();
-    if (diferencaMesesIdadeCadastro < 0 || (diferencaMesesIdadeCadastro === 0 && this.dataCadastro.getDate() < this.dataNascimento.getDate())) {
-      idade--;
-    }
-    return idade;
+    const dataInicial = moment(this.dataNascimento);
+    const dataFinal = moment(this.dataCadastro);
+    console.log('idade', dataFinal.diff(dataInicial, 'years'));
+    return dataFinal.diff(dataInicial, 'years');
   }
 
   private calcularScore(idade: number): number {
